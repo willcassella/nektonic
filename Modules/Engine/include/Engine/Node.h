@@ -4,6 +4,7 @@
 #include <cinttypes>
 #include <vector>
 #include <Core/Math/Mat4.h>
+#include <Core/Memory/StrideIter.h>
 #include "EventChannel.h"
 
 namespace sge
@@ -15,8 +16,8 @@ namespace sge
 	struct SGE_ENGINE_API NodeId
 	{
 		SGE_REFLECTED_TYPE;
-		using Version_t = uint32;
-		using Index_t = uint32;
+        typedef uint64_t InstanceId;
+        typedef uint16_t TypeId;
 
 		////////////////////////
 		///   Constructors   ///
@@ -41,15 +42,15 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		uint64 to_u64() const
-		{
-			return index;
-		}
+        InstanceId get_instance_id(
+        ) const {
+            return packed_id >> 16;
+        }
 
-		void from_u64(uint64 value)
-		{
-			index = value & 0x00000000FFFFFFFF;
-		}
+        TypeId get_type_id(
+        ) const {
+            return (TypeId)(packed_id & 0xFFFF);
+        }
 
 		std::size_t to_string(char* out_str, std::size_t size) const
 		{
@@ -100,7 +101,7 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		Index_t index;
+        uint64_t packed_id;
 	};
 
     struct SGE_ENGINE_API Node
@@ -338,4 +339,85 @@ namespace sge
 		Node* node;
 		Node* root;
 	};
+
+    enum class LinkType : int16 {
+        /**
+         * \brief This Link is parented to the root node without any additional transform.
+         */
+        ROOT,
+
+        /**
+         * \brief This Link is parented to the root node; transforms are in local space.
+         */
+        LOCAL,
+
+        /**
+         * \brief This Link is parented to a socket of the root node; transforms are in local space.
+         */
+        SOCKET,
+
+        /**
+         * \brief This Link is not parented to the root node; transforms are in global space.
+         */
+        GLOBAL,
+    };
+
+    using SocketId = uint16;
+
+    struct Link {
+        LinkType type;
+        SocketId socket;
+        Vec3 position;
+        Vec3 scale;
+        Quat rotation;
+    };
+
+    struct NodeRef {
+        NodeId id;
+        void* data_ptr1;
+    };
+
+    class SGE_ENGINE_API INodeContainer {
+
+        virtual TypeInfo const& get_type(
+        ) const = 0;
+
+        virtual void to_archive(
+            ArchiveWriter& writer
+        ) const = 0;
+
+        virtual void from_archive(
+            ArchiveReader& reader
+        ) = 0;
+
+        virtual void create_instances(
+            StrideIter<NodeRef> out_refs,
+            size_t num
+        ) = 0;
+
+        virtual void destroy_instances(
+            StrideIter<NodeRef const> instances,
+            size_t num
+        ) = 0;
+
+        virtual size_t get_num_sockets(
+            NodeRef node
+        ) const = 0;
+
+        virtual void get_socket_transforms(
+            NodeRef node,
+            StrideIter<SocketId const> sockets,
+            StrideIter<Mat4> out_transforms,
+            size_t num
+        ) const = 0;
+
+        virtual EventChannel* get_new_instance_channel(
+        ) = 0;
+
+        virtual EventChannel* get_destroyed_instance_channel(
+        ) = 0;
+
+        virtual EventChannel* get_transformed_socket_channel(
+        ) = 0;
+    };
 }
