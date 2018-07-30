@@ -1,3 +1,6 @@
+# Requred for downloading from GitHub
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+
 # URL Configuration
 $packageDir = $args[0] # Directory to save packages to
 $release = $args[1] # Package release to download from
