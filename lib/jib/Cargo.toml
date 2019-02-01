@@ -1,0 +1,9 @@
+[package]
+name = "jib"
+version = "0.1.0"
+authors = ["cassew"]
+edition = "2018"
+
+[dependencies.uuid]
+version = "0.7.1"
+features = ["v4"]

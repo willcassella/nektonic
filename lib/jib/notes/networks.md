@@ -1,0 +1,8 @@
+# Jib networks (jiblets?)
+At the end of the day all each individual application cares about is the ability to access a 'resource' based on 'ResourceId'. Everything else is extraneous. Some of these ResourceIds originate from the local filesystem, based on a manifest declared "somewhere" (in a package) The namespace of ResourceIds is called a network, and within a single network ResourceIds may not conflict. As a client, you can choose to join a network to receive ResourceIds from it.
+
+Once you've joined a network, you can choose which individual resources (or entire packages) you'd like to pick from that network. This is managed by the network daemon, local applications can't tell the difference (network daemon is responsible for making access to resources appear as local as possible, though obviously some design on the part of each consuming application will be necessary).
+
+If you make modifications to a resource you've acquired from a network, that isn't automatically visible to the network you've taken the resource from. The network daemon automatically makes that resource part of your local network, and other networks will have to pick it from your network in order to see your changes. From a user experience perspective, this could be done via notifications or something.
+
+The main purpose of packages is to group resources together (to say something like, "if you want this thing, you probably also want this other thing"). Other than that, they serve no real structural purpose. A single resource may exist in as many packages as you want, and it should not be duplicated if you consume to packages that utilize the same resource.
